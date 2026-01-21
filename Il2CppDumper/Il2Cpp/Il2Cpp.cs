@@ -56,6 +56,17 @@ namespace Il2CppDumper
                 if (Version >= 24.2)
                 {
                     pCodeRegistration = MapVATR<Il2CppCodeRegistration>(codeRegistration);
+                    if (Version == 35 || Version == 38 || Version == 39)
+                    {
+                        if (pCodeRegistration.genericMethodPointersCount > limit)
+                        {
+                            codeRegistration -= PointerSize * 2;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[WARN] Auto Plus Init: This code path has not been tested for il2cpp version {Version}.");
+                        }
+                    }
                     if (Version == 31)
                     {
                         if (pCodeRegistration.genericMethodPointersCount > limit)

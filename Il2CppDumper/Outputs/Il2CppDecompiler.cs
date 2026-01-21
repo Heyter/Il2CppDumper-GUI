@@ -46,7 +46,7 @@ namespace Il2CppDumper
                         {
                             var parent = il2Cpp.types[typeDef.parentIndex];
                             var parentName = executor.GetTypeName(parent, false, false);
-                            if (!typeDef.IsValueType && !typeDef.IsEnum && parentName != "object")
+                            if (!typeDef.bitfield.ValueType && !typeDef.bitfield.EnumType && parentName != "object")
                             {
                                 extends.Add(parentName);
                             }
@@ -92,13 +92,13 @@ namespace Il2CppDumper
                             writer.Write("static ");
                         else if ((typeDef.flags & TYPE_ATTRIBUTE_INTERFACE) == 0 && (typeDef.flags & TYPE_ATTRIBUTE_ABSTRACT) != 0)
                             writer.Write("abstract ");
-                        else if (!typeDef.IsValueType && !typeDef.IsEnum && (typeDef.flags & TYPE_ATTRIBUTE_SEALED) != 0)
+                        else if (!typeDef.bitfield.ValueType && !typeDef.bitfield.EnumType && (typeDef.flags & TYPE_ATTRIBUTE_SEALED) != 0)
                             writer.Write("sealed ");
                         if ((typeDef.flags & TYPE_ATTRIBUTE_INTERFACE) != 0)
                             writer.Write("interface ");
-                        else if (typeDef.IsEnum)
+                        else if (typeDef.bitfield.EnumType)
                             writer.Write("enum ");
-                        else if (typeDef.IsValueType)
+                        else if (typeDef.bitfield.ValueType)
                             writer.Write("struct ");
                         else
                             writer.Write("class ");
@@ -193,7 +193,7 @@ namespace Il2CppDumper
                                     }
                                 }
                                 if (config.DumpFieldOffset && !isConst)
-                                    writer.Write("; // 0x{0:X}\n", il2Cpp.GetFieldOffsetFromIndex(typeDefIndex, i - typeDef.fieldStart, i, typeDef.IsValueType, isStatic));
+                                    writer.Write("; // 0x{0:X}\n", il2Cpp.GetFieldOffsetFromIndex(typeDefIndex, i - typeDef.fieldStart, i, typeDef.bitfield.ValueType, isStatic));
                                 else
                                     writer.Write(";\n");
                             }
@@ -425,7 +425,8 @@ namespace Il2CppDumper
                 {
                     var startRange = metadata.attributeDataRanges[attributeIndex];
                     var endRange = metadata.attributeDataRanges[attributeIndex + 1];
-                    metadata.Position = metadata.header.attributeDataOffset + startRange.startOffset;
+                    var attributeDataOffset = metadata.Version >= 38 ? metadata.header.attributeData.offset : metadata.header.attributeDataOffset;
+                    metadata.Position = (ulong)attributeDataOffset + startRange.startOffset;
                     var buff = metadata.ReadBytes((int)(endRange.startOffset - startRange.startOffset));
                     var reader = new CustomAttributeDataReader(executor, buff);
                     if (reader.Count == 0)

@@ -1,208 +1,477 @@
 ﻿using System;
+using AssemblyIndex = int;
+using ImageIndex = int;
+using StringIndex = uint;
+using StringLiteralIndex = int;
+using FieldIndex = int;
+using MethodIndex = int;
+using GenericParameterIndex = int;
+using GenericParameterConstraintIndex = short;
+using CustomAttributeIndex = int;
+using EventIndex = int;
+using PropertyIndex = int;
+using NestedTypeIndex = int;
+using InterfacesIndex = int;
+using VTableIndex = int;
+using DefaultValueDataIndex = int;
 
 namespace Il2CppDumper
 {
     public class Il2CppGlobalMetadataHeader
     {
-        public uint sanity;
-        public int version;
-        public uint stringLiteralOffset; // string data for managed code
-        public int stringLiteralSize;
-        public uint stringLiteralDataOffset;
-        public int stringLiteralDataSize;
-        public uint stringOffset; // string data for metadata
-        public int stringSize;
-        public uint eventsOffset; // Il2CppEventDefinition
-        public int eventsSize;
-        public uint propertiesOffset; // Il2CppPropertyDefinition
-        public int propertiesSize;
-        public uint methodsOffset; // Il2CppMethodDefinition
-        public int methodsSize;
-        public uint parameterDefaultValuesOffset; // Il2CppParameterDefaultValue
-        public int parameterDefaultValuesSize;
-        public uint fieldDefaultValuesOffset; // Il2CppFieldDefaultValue
-        public int fieldDefaultValuesSize;
-        public uint fieldAndParameterDefaultValueDataOffset; // uint8_t
-        public int fieldAndParameterDefaultValueDataSize;
-        public int fieldMarshaledSizesOffset; // Il2CppFieldMarshaledSize
-        public int fieldMarshaledSizesSize;
-        public uint parametersOffset; // Il2CppParameterDefinition
-        public int parametersSize;
-        public uint fieldsOffset; // Il2CppFieldDefinition
-        public int fieldsSize;
-        public uint genericParametersOffset; // Il2CppGenericParameter
-        public int genericParametersSize;
-        public uint genericParameterConstraintsOffset; // TypeIndex
-        public int genericParameterConstraintsSize;
-        public uint genericContainersOffset; // Il2CppGenericContainer
-        public int genericContainersSize;
-        public uint nestedTypesOffset; // TypeDefinitionIndex
-        public int nestedTypesSize;
-        public uint interfacesOffset; // TypeIndex
-        public int interfacesSize;
-        public uint vtableMethodsOffset; // EncodedMethodIndex
-        public int vtableMethodsSize;
-        public int interfaceOffsetsOffset; // Il2CppInterfaceOffsetPair
-        public int interfaceOffsetsSize;
-        public uint typeDefinitionsOffset; // Il2CppTypeDefinition
-        public int typeDefinitionsSize;
-        [Version(Max = 24.1)]
-        public uint rgctxEntriesOffset; // Il2CppRGCTXDefinition
-        [Version(Max = 24.1)]
-        public int rgctxEntriesCount;
-        public uint imagesOffset; // Il2CppImageDefinition
-        public int imagesSize;
-        public uint assembliesOffset; // Il2CppAssemblyDefinition
-        public int assembliesSize;
-        [Version(Min = 19, Max = 24.5)]
-        public uint metadataUsageListsOffset; // Il2CppMetadataUsageList
-        [Version(Min = 19, Max = 24.5)]
-        public int metadataUsageListsCount;
-        [Version(Min = 19, Max = 24.5)]
-        public uint metadataUsagePairsOffset; // Il2CppMetadataUsagePair
-        [Version(Min = 19, Max = 24.5)]
-        public int metadataUsagePairsCount;
-        [Version(Min = 19)]
-        public uint fieldRefsOffset; // Il2CppFieldRef
-        [Version(Min = 19)]
-        public int fieldRefsSize;
-        [Version(Min = 20)]
-        public int referencedAssembliesOffset; // int32_t
-        [Version(Min = 20)]
-        public int referencedAssembliesSize;
-        [Version(Min = 21, Max = 27.2)]
-        public uint attributesInfoOffset; // Il2CppCustomAttributeTypeRange
-        [Version(Min = 21, Max = 27.2)]
-        public int attributesInfoCount;
-        [Version(Min = 21, Max = 27.2)]
-        public uint attributeTypesOffset; // TypeIndex
-        [Version(Min = 21, Max = 27.2)]
-        public int attributeTypesCount;
-        [Version(Min = 29)]
-        public uint attributeDataOffset;
-        [Version(Min = 29)]
-        public int attributeDataSize;
-        [Version(Min = 29)]
-        public uint attributeDataRangeOffset;
-        [Version(Min = 29)]
-        public int attributeDataRangeSize;
-        [Version(Min = 22)]
-        public int unresolvedVirtualCallParameterTypesOffset; // TypeIndex
-        [Version(Min = 22)]
-        public int unresolvedVirtualCallParameterTypesSize;
-        [Version(Min = 22)]
-        public int unresolvedVirtualCallParameterRangesOffset; // Il2CppRange
-        [Version(Min = 22)]
-        public int unresolvedVirtualCallParameterRangesSize;
-        [Version(Min = 23)]
-        public int windowsRuntimeTypeNamesOffset; // Il2CppWindowsRuntimeTypeNamePair
-        [Version(Min = 23)]
-        public int windowsRuntimeTypeNamesSize;
-        [Version(Min = 27)]
-        public int windowsRuntimeStringsOffset; // const char*
-        [Version(Min = 27)]
-        public int windowsRuntimeStringsSize;
-        [Version(Min = 24)]
-        public int exportedTypeDefinitionsOffset; // TypeDefinitionIndex
-        [Version(Min = 24)]
-        public int exportedTypeDefinitionsSize;
+       public uint sanity;
+       public int version;
+
+       [Version(Max = 35)]
+       public int stringLiteralOffset; // string data for managed code
+
+       [Version(Max = 35)]
+       public int stringLiteralSize;
+
+       [Version(Max = 35)]
+       public int stringLiteralDataOffset;
+
+       [Version(Max = 35)]
+       public int stringLiteralDataSize;
+
+       [Version(Max = 35)]
+       public int stringOffset; // string data for metadata
+
+       [Version(Max = 35)]
+       public int stringSize;
+
+       [Version(Max = 35)]
+       public int eventsOffset; // Il2CppEventDefinition
+
+       [Version(Max = 35)]
+       public int eventsSize;
+
+       [Version(Max = 35)]
+       public int propertiesOffset; // Il2CppPropertyDefinition
+
+       [Version(Max = 35)]
+       public int propertiesSize;
+
+       [Version(Max = 35)]
+       public int methodsOffset; // Il2CppMethodDefinition
+
+       [Version(Max = 35)]
+       public int methodsSize;
+
+       [Version(Max = 35)]
+       public int parameterDefaultValuesOffset; // Il2CppParameterDefaultValue
+
+       [Version(Max = 35)]
+       public int parameterDefaultValuesSize;
+
+       [Version(Max = 35)]
+       public int fieldDefaultValuesOffset; // Il2CppFieldDefaultValue
+
+       [Version(Max = 35)]
+       public int fieldDefaultValuesSize;
+
+       [Version(Max = 35)]
+       public int fieldAndParameterDefaultValueDataOffset; // int8_t
+
+       [Version(Max = 35)]
+       public int fieldAndParameterDefaultValueDataSize;
+
+       [Version(Max = 35)]
+       public int fieldMarshaledSizesOffset; // Il2CppFieldMarshaledSize
+
+       [Version(Max = 35)]
+       public int fieldMarshaledSizesSize;
+
+       [Version(Max = 35)]
+       public int parametersOffset; // Il2CppParameterDefinition
+
+       [Version(Max = 35)]
+       public int parametersSize;
+
+       [Version(Max = 35)]
+       public int fieldsOffset; // Il2CppFieldDefinition
+
+       [Version(Max = 35)]
+       public int fieldsSize;
+
+       [Version(Max = 35)]
+       public int genericParametersOffset; // Il2CppGenericParameter
+
+       [Version(Max = 35)]
+       public int genericParametersSize;
+
+       [Version(Max = 35)]
+       public int genericParameterConstraintsOffset; // TypeIndex
+
+       [Version(Max = 35)]
+       public int genericParameterConstraintsSize;
+
+       [Version(Max = 35)]
+       public int genericContainersOffset; // Il2CppGenericContainer
+
+       [Version(Max = 35)]
+       public int genericContainersSize;
+
+       [Version(Max = 35)]
+       public int nestedTypesOffset; // TypeDefinitionIndex
+
+       [Version(Max = 35)]
+       public int nestedTypesSize;
+
+       [Version(Max = 35)]
+       public int interfacesOffset; // TypeIndex
+
+       [Version(Max = 35)]
+       public int interfacesSize;
+
+       [Version(Max = 35)]
+       public int vtableMethodsOffset; // EncodedMethodIndex
+
+       [Version(Max = 35)]
+       public int vtableMethodsSize;
+
+       [Version(Max = 35)]
+       public int interfaceOffsetsOffset; // Il2CppInterfaceOffsetPair
+
+       [Version(Max = 35)]
+       public int interfaceOffsetsSize;
+
+       [Version(Max = 35)]
+       public int typeDefinitionsOffset; // Il2CppTypeDefinition
+
+       [Version(Max = 35)]
+       public int typeDefinitionsSize;
+
+       [Version(Max = 24.1)]
+       public int rgctxEntriesOffset; // Il2CppRGCTXDefinition
+
+       [Version(Max = 24.1)]
+       public int rgctxEntriesCount;
+
+       [Version(Max = 35)]
+       public int imagesOffset; // Il2CppImageDefinition
+
+       [Version(Max = 35)]
+       public int imagesSize;
+
+       [Version(Max = 35)]
+       public int assembliesOffset; // Il2CppAssemblyDefinition
+
+       [Version(Max = 35)]
+       public int assembliesSize;
+
+       [Version(Min = 19, Max = 24.5)]
+       public int metadataUsageListsOffset; // Il2CppMetadataUsageList
+
+       [Version(Min = 19, Max = 24.5)]
+       public int metadataUsageListsCount;
+
+       [Version(Min = 19, Max = 24.5)]
+       public int metadataUsagePairsOffset; // Il2CppMetadataUsagePair
+
+       [Version(Min = 19, Max = 24.5)]
+       public int metadataUsagePairsCount;
+
+       [Version(Min = 19, Max = 35)]
+       public int fieldRefsOffset; // Il2CppFieldRef
+
+       [Version(Min = 19, Max = 35)]
+       public int fieldRefsSize;
+
+       [Version(Min = 20, Max = 35)]
+       public int referencedAssembliesOffset; // int32_t
+
+       [Version(Min = 20, Max = 35)]
+       public int referencedAssembliesSize;
+
+       [Version(Min = 21, Max = 27.2)]
+       public int attributesInfoOffset; // Il2CppCustomAttributeTypeRange
+
+       [Version(Min = 21, Max = 27.2)]
+       public int attributesInfoCount;
+
+       [Version(Min = 21, Max = 27.2)]
+       public int attributeTypesOffset; // TypeIndex
+
+       [Version(Min = 21, Max = 27.2)]
+       public int attributeTypesCount;
+
+       [Version(Min = 29, Max = 35)]
+       public int attributeDataOffset;
+
+       [Version(Min = 29, Max = 35)]
+       public int attributeDataSize;
+
+       [Version(Min = 29, Max = 35)]
+       public int attributeDataRangeOffset;
+
+       [Version(Min = 29, Max = 35)]
+       public int attributeDataRangeSize;
+
+       [Version(Min = 22, Max = 35)]
+       public int unresolvedVirtualCallParameterTypesOffset; // TypeIndex
+
+       [Version(Min = 22, Max = 35)]
+       public int unresolvedVirtualCallParameterTypesSize;
+
+       [Version(Min = 22, Max = 35)]
+       public int unresolvedVirtualCallParameterRangesOffset; // Il2CppRange
+
+       [Version(Min = 22, Max = 35)]
+       public int unresolvedVirtualCallParameterRangesSize;
+
+       [Version(Min = 23, Max = 35)]
+       public int windowsRuntimeTypeNamesOffset; // Il2CppWindowsRuntimeTypeNamePair
+
+       [Version(Min = 23, Max = 35)]
+       public int windowsRuntimeTypeNamesSize;
+
+       [Version(Min = 27, Max = 35)]
+       public int windowsRuntimeStringsOffset; // const char*
+
+       [Version(Min = 27, Max = 35)]
+       public int windowsRuntimeStringsSize;
+
+       [Version(Min = 24, Max = 35)]
+       public int exportedTypeDefinitionsOffset; // TypeDefinitionIndex
+
+       [Version(Min = 24, Max = 35)]
+       public int exportedTypeDefinitionsSize;
+
+       // - v38
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata stringLiterals;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata stringLiteralData;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata strings;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata events;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata properties;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata methods;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata parameterDefaultValues;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata fieldDefaultValues;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata fieldAndParameterDefaultValueData;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata fieldMarshaledSizes;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata parameters;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata fields;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata genericParameters;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata genericParameterConstraints;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata genericContainers;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata nestedTypes;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata interfaces;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata vtableMethods;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata interfaceOffsets;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata typeDefinitions;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata images;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata assemblies;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata fieldRefs;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata referencedAssemblies;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata attributeData;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata attributeDataRanges;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata unresolvedIndirectCallParameterTypes;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata unresolvedIndirectCallParameterRanges;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata windowsRuntimeTypeNames;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata windowsRuntimeStrings;
+
+       [Version(Min = 38)]
+       public Il2CppSectionMetadata exportedTypeDefinitions;
+    }
+
+    public struct Il2CppSectionMetadata
+    {
+        public int offset;
+
+        public int size;
+
+        public int count;
     }
 
     public class Il2CppAssemblyDefinition
     {
-        public int imageIndex;
+        [Version(Max = 15.0)]
+        public Il2CppAssemblyNameDefinition legacyAname;
+
+        public ImageIndex imageIndex;
+
         [Version(Min = 24.1)]
         public uint token;
+
+        [Version(Min = 38.0)]
+        public uint moduleToken;
+
         [Version(Max = 24)]
         public int customAttributeIndex;
+
         [Version(Min = 20)]
         public int referencedAssemblyStart;
+
         [Version(Min = 20)]
         public int referencedAssemblyCount;
+
         public Il2CppAssemblyNameDefinition aname;
     }
 
     public class Il2CppAssemblyNameDefinition
     {
-        public uint nameIndex;
-        public uint cultureIndex;
+        public StringIndex nameIndex;
+        public StringIndex cultureIndex;
+
         [Version(Max = 24.3)]
         public int hashValueIndex;
-        public uint publicKeyIndex;
+
+        public StringIndex publicKeyIndex;
+
+        [Version(Max = 15.0)]
+        [ArrayLength(Length = 8)]
+        public byte[] _legacyPublicKeyToken;
+
         public uint hash_alg;
         public int hash_len;
+
         public uint flags;
+
         public int major;
         public int minor;
         public int build;
         public int revision;
+
         [ArrayLength(Length = 8)]
         public byte[] public_key_token;
     }
 
     public class Il2CppImageDefinition
     {
-        public uint nameIndex;
-        public int assemblyIndex;
+        public StringIndex nameIndex;
+        public AssemblyIndex assemblyIndex;
 
-        public int typeStart;
+        public TypeDefinitionIndex typeStart;
         public uint typeCount;
 
         [Version(Min = 24)]
-        public int exportedTypeStart;
+        public TypeDefinitionIndex exportedTypeStart;
+
         [Version(Min = 24)]
         public uint exportedTypeCount;
 
-        public int entryPointIndex;
+        public MethodIndex entryPointIndex;
+
         [Version(Min = 19)]
         public uint token;
 
         [Version(Min = 24.1)]
-        public int customAttributeStart;
+        public CustomAttributeIndex customAttributeStart;
+
         [Version(Min = 24.1)]
         public uint customAttributeCount;
+
+        public bool IsValid => nameIndex != 0;
     }
 
     public class Il2CppTypeDefinition
     {
-        public uint nameIndex;
-        public uint namespaceIndex;
+        public StringIndex nameIndex;
+        public StringIndex namespaceIndex;
+
         [Version(Max = 24)]
         public int customAttributeIndex;
-        public int byvalTypeIndex;
-        [Version(Max = 24.5)]
-        public int byrefTypeIndex;
 
-        public int declaringTypeIndex;
-        public int parentIndex;
-        public int elementTypeIndex; // we can probably remove this one. Only used for enums
+        public TypeIndex byvalTypeIndex;
+
+        [Version(Max = 24.5)]
+        public TypeIndex byrefTypeIndex;
+
+        public TypeIndex declaringTypeIndex;
+        public TypeIndex parentIndex;
+
+        [Version(Max = 31)]
+        public TypeIndex elementTypeIndex; // we can probably remove this one. Only used for enums
 
         [Version(Max = 24.1)]
         public int rgctxStartIndex;
         [Version(Max = 24.1)]
         public int rgctxCount;
 
-        public int genericContainerIndex;
+        public GenericContainerIndex genericContainerIndex;
 
         [Version(Max = 22)]
         public int delegateWrapperFromManagedToNativeIndex;
+
         [Version(Max = 22)]
         public int marshalingFunctionsIndex;
+
         [Version(Min = 21, Max = 22)]
         public int ccwFunctionIndex;
+
         [Version(Min = 21, Max = 22)]
         public int guidIndex;
 
         public uint flags;
 
-        public int fieldStart;
-        public int methodStart;
-        public int eventStart;
-        public int propertyStart;
-        public int nestedTypesStart;
-        public int interfacesStart;
-        public int vtableStart;
-        public int interfaceOffsetsStart;
+        public FieldIndex fieldStart;
+        public MethodIndex methodStart;
+        public EventIndex eventStart;
+        public PropertyIndex propertyStart;
+        public NestedTypeIndex nestedTypesStart;
+        public InterfacesIndex interfacesStart;
+        public VTableIndex vtableStart;
+        public InterfacesIndex interfaceOffsetsStart;
 
         public ushort method_count;
         public ushort property_count;
@@ -213,135 +482,184 @@ namespace Il2CppDumper
         public ushort interfaces_count;
         public ushort interface_offsets_count;
 
-        // bitfield to portably encode boolean values as single bits
-        // 01 - valuetype;
-        // 02 - enumtype;
-        // 03 - has_finalize;
-        // 04 - has_cctor;
-        // 05 - is_blittable;
-        // 06 - is_import_or_windows_runtime;
-        // 07-10 - One of nine possible PackingSize values (0, 1, 2, 4, 8, 16, 32, 64, or 128)
-        // 11 - PackingSize is default
-        // 12 - ClassSize is default
-        // 13-16 - One of nine possible PackingSize values (0, 1, 2, 4, 8, 16, 32, 64, or 128) - the specified packing size (even for explicit layouts)
-        public uint bitfield;
+        public Il2CppTypeDefinitionBitfield bitfield;
+
         [Version(Min = 19)]
         public uint token;
+    }
 
-        public bool IsValueType => (bitfield & 0x1) == 1;
-        public bool IsEnum => ((bitfield >> 1) & 0x1) == 1;
+    public struct Il2CppTypeDefinitionBitfield
+    {
+        public uint _value;
+
+        public bool ValueType => ((_value >> 0) & 1) == 1;
+        public bool EnumType => ((_value >> 1) & 1) == 1;
+        public bool HasFinalize => ((_value >> 2) & 1) == 1;
+        public bool HasCctor => ((_value >> 3) & 1) == 1;
+        public bool IsBlittable => ((_value >> 4) & 1) == 1;
+        public bool IsImportOrWindowsRuntime => ((_value >> 5) & 1) == 1;
+        public PackingSize PackingSize => (PackingSize)((_value >> 6) & 0b1111);
+        public bool DefaultPackingSize => ((_value >> 10) & 1) == 1;
+        public bool DefaultClassSize => ((_value >> 11) & 1) == 1;
+        public PackingSize ClassSize => (PackingSize)((_value >> 12) & 0b1111);
+        public bool IsByRefLike => ((_value >> 13) & 1) == 1;
+    }
+
+    public enum PackingSize
+    {
+        Zero,
+        One,
+        Two,
+        Four,
+        Eight,
+        Sixteen,
+        ThirtyTwo,
+        SixtyFour,
+        OneHundredTwentyEight
     }
 
     public class Il2CppMethodDefinition
     {
-        public uint nameIndex;
-        public int declaringType;
-        public int returnType;
+        public StringIndex nameIndex;
+
+        [Version(Min = 16)]
+        public TypeDefinitionIndex declaringType;
+        public TypeIndex returnType;
+
         [Version(Min = 31)]
         public int returnParameterToken;
-        public int parameterStart;
+
+        public ParameterIndex parameterStart;
+
         [Version(Max = 24)]
         public int customAttributeIndex;
-        public int genericContainerIndex;
+
+        public GenericContainerIndex genericContainerIndex;
+
         [Version(Max = 24.1)]
         public int methodIndex;
+
         [Version(Max = 24.1)]
         public int invokerIndex;
+
         [Version(Max = 24.1)]
         public int delegateWrapperIndex;
+
         [Version(Max = 24.1)]
         public int rgctxStartIndex;
+
         [Version(Max = 24.1)]
         public int rgctxCount;
+
         public uint token;
         public ushort flags;
         public ushort iflags;
         public ushort slot;
         public ushort parameterCount;
+
+        public bool IsValid => nameIndex != 0;
     }
 
     public class Il2CppParameterDefinition
     {
-        public uint nameIndex;
+        public StringIndex nameIndex;
         public uint token;
+
         [Version(Max = 24)]
         public int customAttributeIndex;
-        public int typeIndex;
+
+        public TypeIndex typeIndex;
+
+        public bool IsValid => nameIndex != 0;
     }
 
     public class Il2CppFieldDefinition
     {
-        public uint nameIndex;
-        public int typeIndex;
+        public StringIndex nameIndex;
+        public TypeIndex typeIndex;
+
         [Version(Max = 24)]
         public int customAttributeIndex;
+
         [Version(Min = 19)]
         public uint token;
+
+        public bool IsValid => nameIndex != 0;
     }
 
-    public class Il2CppFieldDefaultValue
+    public struct Il2CppFieldDefaultValue
     {
-        public int fieldIndex;
-        public int typeIndex;
-        public int dataIndex;
+        public FieldIndex fieldIndex;
+        public TypeIndex typeIndex;
+        public DefaultValueDataIndex dataIndex;
     }
 
     public class Il2CppPropertyDefinition
     {
-        public uint nameIndex;
-        public int get;
-        public int set;
+        public StringIndex nameIndex;
+        public MethodIndex get;
+        public MethodIndex set;
         public uint attrs;
+
         [Version(Max = 24)]
         public int customAttributeIndex;
+
         [Version(Min = 19)]
         public uint token;
+
+        public bool IsValid => nameIndex != 0;
     }
 
-    public class Il2CppCustomAttributeTypeRange
+    public struct Il2CppCustomAttributeTypeRange
     {
         [Version(Min = 24.1)]
         public uint token;
+
         public int start;
         public int count;
     }
 
-    public class Il2CppMetadataUsageList
+    public struct Il2CppMetadataUsageList
     {
-        public uint start;
-        public uint count;
+        public int start;
+        public int count;
     }
 
-    public class Il2CppMetadataUsagePair
+    public struct Il2CppMetadataUsagePair
     {
         public uint destinationIndex;
         public uint encodedSourceIndex;
     }
 
-    public class Il2CppStringLiteral
+    public struct Il2CppStringLiteral
     {
+        [Version(Max = 31)]
         public uint length;
-        public int dataIndex;
+        public StringLiteralIndex dataIndex;
     }
 
-    public class Il2CppParameterDefaultValue
+    public struct Il2CppParameterDefaultValue
     {
-        public int parameterIndex;
-        public int typeIndex;
-        public int dataIndex;
+        public ParameterIndex parameterIndex;
+        public TypeIndex typeIndex;
+        public DefaultValueDataIndex dataIndex;
     }
 
     public class Il2CppEventDefinition
     {
-        public uint nameIndex;
-        public int typeIndex;
-        public int add;
-        public int remove;
-        public int raise;
+        public StringIndex nameIndex;
+        public TypeIndex typeIndex;
+        public MethodIndex add;
+        public MethodIndex remove;
+        public MethodIndex raise;
+
         [Version(Max = 24)]
         public int customAttributeIndex;
+
         [Version(Min = 19)]
         public uint token;
+
+        public bool IsValid => nameIndex != 0;
     }
 
     public class Il2CppGenericContainer
@@ -352,20 +670,20 @@ namespace Il2CppDumper
         /* If true, we're a generic method, otherwise a generic type definition. */
         public int is_method;
         /* Our type parameters. */
-        public int genericParameterStart;
+        public GenericParameterIndex genericParameterStart;
     }
 
-    public class Il2CppFieldRef
+    public struct Il2CppFieldRef
     {
-        public int typeIndex;
-        public int fieldIndex; // local offset into type fields
+        public TypeIndex typeIndex;
+        public FieldIndex fieldIndex; // local offset into type fields
     }
 
     public class Il2CppGenericParameter
     {
-        public int ownerIndex;  /* Type or method this parameter was defined in. */
-        public uint nameIndex;
-        public short constraintsStart;
+        public GenericContainerIndex ownerIndex;  /* Type or method this parameter was defined in. */
+        public StringIndex nameIndex;
+        public GenericParameterConstraintIndex constraintsStart;
         public short constraintsCount;
         public ushort num;
         public ushort flags;
@@ -381,7 +699,7 @@ namespace Il2CppDumper
         IL2CPP_RGCTX_DATA_CONSTRAINED,
     }
 
-    public class Il2CppRGCTXDefinitionData
+    public struct Il2CppRGCTXDefinitionData
     {
         public int rgctxDataDummy;
         public int methodIndex => rgctxDataDummy;
@@ -412,9 +730,86 @@ namespace Il2CppDumper
         kIl2CppMetadataUsageMethodRef,
     };
 
-    public class Il2CppCustomAttributeDataRange
+    public struct Il2CppCustomAttributeDataRange
     {
         public uint token;
         public uint startOffset;
+    }
+
+    public enum IndexType
+    {
+        Type,
+        TypeDefinition,
+        GenericContainer,
+        Parameter,
+    }
+
+    public enum IndexSize
+    {
+        Byte = 1,
+        UShort = 2,
+        Int = 4,
+        Default = Int
+    }
+
+    public interface IIl2CppIndex
+    {
+        static IndexType Type { get; }
+        static abstract IndexSize Size { get; set; }
+        int Value { get; }
+
+        void Read(BinaryStream stream);
+    }
+
+    public struct TypeIndex(int value) : IIl2CppIndex
+    {
+        public static IndexSize Size { get; set; } = IndexSize.Default;
+        public int Value { get; private set; } = value;
+
+        public void Read(BinaryStream stream) => Value = stream.ReadIndex<TypeIndex>();
+
+        public static implicit operator int(TypeIndex idx) => idx.Value;
+        public static implicit operator TypeIndex(int idx) => new(idx);
+
+        public override string ToString() => Value.ToString();
+    }
+
+    public struct TypeDefinitionIndex(int value) : IIl2CppIndex
+    {
+        public static IndexSize Size { get; set; } = IndexSize.Default;
+        public int Value { get; private set; } = value;
+
+        public void Read(BinaryStream stream) => Value = stream.ReadIndex<TypeDefinitionIndex>();
+
+        public static implicit operator int(TypeDefinitionIndex idx) => idx.Value;
+        public static implicit operator TypeDefinitionIndex(int idx) => new(idx);
+
+        public override string ToString() => Value.ToString();
+    }
+
+    public struct GenericContainerIndex(int value) : IIl2CppIndex
+    {
+        public static IndexSize Size { get; set; } = IndexSize.Default;
+        public int Value { get; private set; } = value;
+
+        public void Read(BinaryStream stream) => Value = stream.ReadIndex<GenericContainerIndex>();
+
+        public static implicit operator int(GenericContainerIndex idx) => idx.Value;
+        public static implicit operator GenericContainerIndex(int idx) => new(idx);
+
+        public override string ToString() => Value.ToString();
+    }
+
+    public struct ParameterIndex(int value) : IIl2CppIndex
+    {
+        public static IndexSize Size { get; set; } = IndexSize.Default;
+        public int Value { get; private set; } = value;
+
+        public void Read(BinaryStream stream) => Value = stream.ReadIndex<ParameterIndex>();
+
+        public static implicit operator int(ParameterIndex idx) => idx.Value;
+        public static implicit operator ParameterIndex(int idx) => new(idx);
+
+        public override string ToString() => Value.ToString();
     }
 }

@@ -106,6 +106,29 @@ namespace Il2CppDumper
             };
         }
 
+        public int ReadIndex<T>() where T : IIl2CppIndex
+        {
+            switch (T.Size)
+               {
+                    case IndexSize.Byte:
+                         {
+                              var value = ReadByte();
+                              return value == byte.MaxValue ? -1 : value;
+                         }
+                    case IndexSize.UShort:
+                         {
+                              var value = ReadUInt16();
+                              return value == ushort.MaxValue ? -1 : value;
+                         }
+                    case IndexSize.Int:
+                         {
+                              return ReadInt32();
+                         }
+                    default:
+                         throw new NotSupportedException();
+               }
+        }
+
         public T ReadClass<T>(ulong addr) where T : new()
         {
             Position = addr;
@@ -121,7 +144,7 @@ namespace Il2CppDumper
             }
             else
             {
-                var t = new T();
+                object t = new T();
                 foreach (var i in t.GetType().GetFields())
                 {
                     if (!attributeCache.TryGetValue(i, out var versionAttributes))
@@ -168,6 +191,12 @@ namespace Il2CppDumper
                         }
                         i.SetValue(t, methodInfo.Invoke(this, new object[] { arrayLengthAttribute.Length }));
                     }
+                    else if (typeof(IIl2CppIndex).IsAssignableFrom(fieldType))
+                    {
+                        var index = (IIl2CppIndex)Activator.CreateInstance(fieldType);
+                        index.Read(this);
+                        i.SetValue(t, index);
+                    }
                     else
                     {
                         if (!genericMethodCache.TryGetValue(fieldType, out var methodInfo))
@@ -178,7 +207,7 @@ namespace Il2CppDumper
                         i.SetValue(t, methodInfo.Invoke(this, null));
                     }
                 }
-                return t;
+                return (T)t;
             }
         }
 

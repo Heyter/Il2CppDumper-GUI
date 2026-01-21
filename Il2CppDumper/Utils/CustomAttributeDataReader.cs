@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Il2CppDumper
@@ -7,6 +8,7 @@ namespace Il2CppDumper
     {
         private readonly Il2CppExecutor executor;
         private readonly Metadata metadata;
+
         private long ctorBuffer;
         private long dataBuffer;
 
@@ -16,7 +18,9 @@ namespace Il2CppDumper
         {
             this.executor = executor;
             metadata = executor.metadata;
+
             Count = this.ReadCompressedUInt32();
+
             ctorBuffer = BaseStream.Position;
             dataBuffer = BaseStream.Position + Count * 4;
         }
@@ -40,6 +44,7 @@ namespace Il2CppDumper
             {
                 argList.Add($"{AttributeDataToString(ReadAttributeDataValue())}");
             }
+
             for (var i = 0; i < fieldCount; i++)
             {
                 var str = AttributeDataToString(ReadAttributeDataValue());
@@ -47,6 +52,7 @@ namespace Il2CppDumper
                 var fieldDef = metadata.fieldDefs[declaring.fieldStart + fieldIndex];
                 argList.Add($"{metadata.GetStringFromIndex(fieldDef.nameIndex)} = {str}");
             }
+
             for (var i = 0; i < propertyCount; i++)
             {
                 var str = AttributeDataToString(ReadAttributeDataValue());
@@ -54,10 +60,10 @@ namespace Il2CppDumper
                 var propertyDef = metadata.propertyDefs[declaring.propertyStart + propertyIndex];
                 argList.Add($"{metadata.GetStringFromIndex(propertyDef.nameIndex)} = {str}");
             }
+
             dataBuffer = BaseStream.Position;
-
-
             var typeName = metadata.GetStringFromIndex(typeDef.nameIndex).Replace("Attribute", "");
+
             if (argList.Count > 0)
             {
                 return $"[{typeName}({string.Join(", ", argList)})]";
@@ -70,11 +76,52 @@ namespace Il2CppDumper
 
         private string AttributeDataToString(BlobValue blobValue)
         {
-            //TODO enum
             if (blobValue.Value == null)
             {
                 return "null";
             }
+
+            if (blobValue.EnumType != null)
+            {
+                var typeDef = executor.GetTypeDefinitionFromIl2CppType(blobValue.EnumType);
+                var typeName = metadata.GetStringFromIndex(typeDef.nameIndex);
+
+                long blobLongValue = 0;
+                try {
+                    blobLongValue = Convert.ToInt64(blobValue.Value);
+                } catch {
+                		return $"({typeName}){blobValue.Value}";
+                }
+
+                var fieldEnd = typeDef.fieldStart + typeDef.field_count;
+			          for (int i = typeDef.fieldStart; i < fieldEnd; i++)
+			          {
+			              var fieldDef = metadata.fieldDefs[i];
+			              var fieldName = metadata.GetStringFromIndex(fieldDef.nameIndex);
+
+			              if (fieldName == "value__") continue;
+
+			              if (metadata.GetFieldDefaultValueFromIndex(i, out var fieldDefaultValue) && fieldDefaultValue.dataIndex != -1)
+			              {
+			                  if (executor.TryGetDefaultValue(fieldDefaultValue.typeIndex, fieldDefaultValue.dataIndex, out var value))
+			                  {
+			                      try
+			                      {
+			                          long fieldLongValue = Convert.ToInt64(value);
+			                          if (fieldLongValue == blobLongValue)
+			                          {
+			                              return $"{typeName}.{fieldName}";
+			                          }
+			                      }
+			                      catch
+			                      {}
+			                  }
+			              }
+			          }
+
+			          return $"({typeName}){blobValue.Value}";
+			      }
+
             switch (blobValue.il2CppTypeEnum)
             {
                 case Il2CppTypeEnum.IL2CPP_TYPE_STRING:
@@ -118,6 +165,7 @@ namespace Il2CppDumper
                 argument.Value = ReadAttributeDataValue();
                 argument.Index = i;
             }
+
             visitor.Fields = new AttributeArgument[fieldCount];
             for (var i = 0; i < fieldCount; i++)
             {
@@ -126,6 +174,7 @@ namespace Il2CppDumper
                 (var declaring, var fieldIndex) = ReadCustomAttributeNamedArgumentClassAndIndex(typeDef);
                 field.Index = declaring.fieldStart + fieldIndex;
             }
+
             visitor.Properties = new AttributeArgument[propertyCount];
             for (var i = 0; i < propertyCount; i++)
             {
@@ -136,6 +185,7 @@ namespace Il2CppDumper
             }
 
             dataBuffer = BaseStream.Position;
+
             return visitor;
         }
 

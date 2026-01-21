@@ -81,7 +81,7 @@ namespace Il2CppDumper
                 case Il2CppTypeEnum.IL2CPP_TYPE_VAR:
                 case Il2CppTypeEnum.IL2CPP_TYPE_MVAR:
                     {
-                        var param = GetGenericParameteFromIl2CppType(il2CppType);
+                        var param = GetGenericParameterFromIl2CppType(il2CppType);
                         return metadata.GetStringFromIndex(param.nameIndex);
                     }
                 case Il2CppTypeEnum.IL2CPP_TYPE_CLASS:
@@ -294,7 +294,8 @@ namespace Il2CppDumper
         {
             if (il2Cpp.Version >= 27 && il2Cpp.IsDumped)
             {
-                var offset = il2CppType.data.typeHandle - metadata.ImageBase - metadata.header.typeDefinitionsOffset;
+                var typeDefinitionsOffset = metadata.Version >= 38 ? metadata.header.typeDefinitions.offset : metadata.header.typeDefinitionsOffset;
+                var offset = il2CppType.data.typeHandle - metadata.ImageBase - (ulong)typeDefinitionsOffset;
                 var index = offset / (ulong)metadata.SizeOf(typeof(Il2CppTypeDefinition));
                 return metadata.typeDefs[index];
             }
@@ -304,11 +305,12 @@ namespace Il2CppDumper
             }
         }
 
-        public Il2CppGenericParameter GetGenericParameteFromIl2CppType(Il2CppType il2CppType)
+        public Il2CppGenericParameter GetGenericParameterFromIl2CppType(Il2CppType il2CppType)
         {
             if (il2Cpp.Version >= 27 && il2Cpp.IsDumped)
             {
-                var offset = il2CppType.data.genericParameterHandle - metadata.ImageBase - metadata.header.genericParametersOffset;
+                var genericParametersOffset = metadata.Version >= 38 ? metadata.header.genericParameters.offset : metadata.header.genericParametersOffset;
+                var offset = il2CppType.data.genericParameterHandle - metadata.ImageBase - (ulong)genericParametersOffset;
                 var index = offset / (ulong)metadata.SizeOf(typeof(Il2CppGenericParameter));
                 return metadata.genericParameters[index];
             }
@@ -465,12 +467,33 @@ namespace Il2CppDumper
         {
             enumType = null;
             var type = (Il2CppTypeEnum)reader.ReadByte();
+
             if (type == Il2CppTypeEnum.IL2CPP_TYPE_ENUM)
             {
                 var enumTypeIndex = reader.ReadCompressedInt32();
                 enumType = il2Cpp.types[enumTypeIndex];
                 var typeDef = GetTypeDefinitionFromIl2CppType(enumType);
+
                 type = il2Cpp.types[typeDef.elementTypeIndex].type;
+
+                // Resolve inline enum variant
+                if (type == Il2CppTypeEnum.IL2CPP_TYPE_MVAR)
+                {
+                    var fieldEnd = typeDef.fieldStart + typeDef.field_count;
+                    for (int i = typeDef.fieldStart; i < fieldEnd; i++)
+                    {
+                        var fieldDef = metadata.fieldDefs[i];
+                        var name = metadata.GetStringFromIndex(fieldDef.nameIndex);
+
+                        if (name == "value__")
+                        {
+                            var fieldType = il2Cpp.types[fieldDef.typeIndex];
+                            type = fieldType.type;
+
+                            break;
+                        }
+                    }
+                }
             }
             return type;
         }

@@ -96,8 +96,8 @@ namespace Il2CppDumper
             }
             foreach (var imageDef in metadata.imageDefs)
             {
-                var typeEnd = imageDef.typeStart + imageDef.typeCount;
-                for (var index = imageDef.typeStart; index < typeEnd; ++index)
+                int typeEnd = (int)imageDef.typeStart + (int)imageDef.typeCount;
+                for (int index = imageDef.typeStart; index < typeEnd; ++index)
                 {
                     var typeDef = metadata.typeDefs[index];
                     var typeDefinition = typeDefinitionDic[typeDef];
@@ -539,15 +539,15 @@ namespace Il2CppDumper
                     {
                         if (memberReference is MethodDefinition methodDefinition)
                         {
-                            return CreateGenericParameter(executor.GetGenericParameteFromIl2CppType(il2CppType), methodDefinition.DeclaringType);
+                            return CreateGenericParameter(executor.GetGenericParameterFromIl2CppType(il2CppType), methodDefinition.DeclaringType);
                         }
                         var typeDefinition = (TypeDefinition)memberReference;
-                        return CreateGenericParameter(executor.GetGenericParameteFromIl2CppType(il2CppType), typeDefinition);
+                        return CreateGenericParameter(executor.GetGenericParameterFromIl2CppType(il2CppType), typeDefinition);
                     }
                 case Il2CppTypeEnum.IL2CPP_TYPE_MVAR:
                     {
                         var methodDefinition = (MethodDefinition)memberReference;
-                        return CreateGenericParameter(executor.GetGenericParameteFromIl2CppType(il2CppType), methodDefinition);
+                        return CreateGenericParameter(executor.GetGenericParameterFromIl2CppType(il2CppType), methodDefinition);
                     }
                 case Il2CppTypeEnum.IL2CPP_TYPE_PTR:
                     {
@@ -594,7 +594,8 @@ namespace Il2CppDumper
                     {
                         var startRange = metadata.attributeDataRanges[attributeIndex];
                         var endRange = metadata.attributeDataRanges[attributeIndex + 1];
-                        metadata.Position = metadata.header.attributeDataOffset + startRange.startOffset;
+                        var attributeDataOffset = metadata.Version >= 38 ? metadata.header.attributeData.offset : metadata.header.attributeDataOffset;
+                        metadata.Position = (ulong)attributeDataOffset + startRange.startOffset;
                         var buff = metadata.ReadBytes((int)(endRange.startOffset - startRange.startOffset));
                         var reader = new CustomAttributeDataReader(executor, buff);
                         if (reader.Count != 0)

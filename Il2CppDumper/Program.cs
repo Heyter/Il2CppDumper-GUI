@@ -239,7 +239,8 @@ namespace Il2CppDumper
                 {
                     var typeDef = metadata.typeDefs[0];
                     var il2CppType = il2Cpp.types[typeDef.byvalTypeIndex];
-                    metadata.ImageBase = il2CppType.data.typeHandle - metadata.header.typeDefinitionsOffset;
+                    var typeDefinitionsOffset = metadata.Version >= 38 ? metadata.header.typeDefinitions.offset : metadata.header.typeDefinitionsOffset;
+                    metadata.ImageBase = il2CppType.data.typeHandle - (ulong)typeDefinitionsOffset;
                 }
             }
             catch (Exception e)

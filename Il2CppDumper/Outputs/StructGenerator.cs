@@ -579,7 +579,7 @@ namespace Il2CppDumper
                 case Il2CppTypeEnum.IL2CPP_TYPE_VALUETYPE:
                     {
                         var typeDef = executor.GetTypeDefinitionFromIl2CppType(il2CppType);
-                        if (typeDef.IsEnum)
+                        if (typeDef.bitfield.EnumType)
                         {
                             return ParseType(il2Cpp.types[typeDef.elementTypeIndex]);
                         }
@@ -594,7 +594,7 @@ namespace Il2CppDumper
                     {
                         if (context != null)
                         {
-                            var genericParameter = executor.GetGenericParameteFromIl2CppType(il2CppType);
+                            var genericParameter = executor.GetGenericParameterFromIl2CppType(il2CppType);
                             var genericInst = il2Cpp.MapVATR<Il2CppGenericInst>(context.class_inst);
                             var pointers = il2Cpp.MapVATR<ulong>(genericInst.type_argv, genericInst.type_argc);
                             var pointer = pointers[genericParameter.num];
@@ -624,9 +624,9 @@ namespace Il2CppDumper
                         {
                             genericClassList.Add(il2CppType.data.generic_class);
                         }
-                        if (typeDef.IsValueType)
+                        if (typeDef.bitfield.ValueType)
                         {
-                            if (typeDef.IsEnum)
+                            if (typeDef.bitfield.EnumType)
                             {
                                 return ParseType(il2Cpp.types[typeDef.elementTypeIndex]);
                             }
@@ -657,7 +657,7 @@ namespace Il2CppDumper
                     {
                         if (context != null)
                         {
-                            var genericParameter = executor.GetGenericParameteFromIl2CppType(il2CppType);
+                            var genericParameter = executor.GetGenericParameterFromIl2CppType(il2CppType);
                             //https://github.com/Perfare/Il2CppDumper/issues/687
                             if (context.method_inst == 0 && context.class_inst != 0)
                             {
@@ -699,7 +699,7 @@ namespace Il2CppDumper
             var structInfo = new StructInfo();
             structInfoList.Add(structInfo);
             structInfo.TypeName = structNameDic[typeDef];
-            structInfo.IsValueType = typeDef.IsValueType;
+            structInfo.IsValueType = typeDef.bitfield.ValueType;
             AddParents(typeDef, structInfo);
             AddFields(typeDef, structInfo, null);
             AddVTableMethod(structInfo, typeDef);
@@ -713,7 +713,7 @@ namespace Il2CppDumper
             var structInfo = new StructInfo();
             structInfoList.Add(structInfo);
             structInfo.TypeName = genericClassStructNameDic[pointer];
-            structInfo.IsValueType = typeDef.IsValueType;
+            structInfo.IsValueType = typeDef.bitfield.ValueType;
             AddParents(typeDef, structInfo);
             AddFields(typeDef, structInfo, genericClass.context);
             AddVTableMethod(structInfo, typeDef);
@@ -721,7 +721,7 @@ namespace Il2CppDumper
 
         private void AddParents(Il2CppTypeDefinition typeDef, StructInfo structInfo)
         {
-            if (!typeDef.IsValueType && !typeDef.IsEnum)
+            if (!typeDef.bitfield.ValueType && !typeDef.bitfield.EnumType)
             {
                 if (typeDef.parentIndex >= 0)
                 {
@@ -1194,7 +1194,7 @@ namespace Il2CppDumper
                     {
                         if (context != null)
                         {
-                            var genericParameter = executor.GetGenericParameteFromIl2CppType(il2CppType);
+                            var genericParameter = executor.GetGenericParameterFromIl2CppType(il2CppType);
                             var genericInst = il2Cpp.MapVATR<Il2CppGenericInst>(context.class_inst);
                             var pointers = il2Cpp.MapVATR<ulong>(genericInst.type_argv, genericInst.type_argc);
                             var pointer = pointers[genericParameter.num];
@@ -1207,7 +1207,7 @@ namespace Il2CppDumper
                     {
                         if (context != null)
                         {
-                            var genericParameter = executor.GetGenericParameteFromIl2CppType(il2CppType);
+                            var genericParameter = executor.GetGenericParameterFromIl2CppType(il2CppType);
                             var genericInst = il2Cpp.MapVATR<Il2CppGenericInst>(context.method_inst);
                             var pointers = il2Cpp.MapVATR<ulong>(genericInst.type_argv, genericInst.type_argc);
                             var pointer = pointers[genericParameter.num];
@@ -1228,19 +1228,19 @@ namespace Il2CppDumper
                 case Il2CppTypeEnum.IL2CPP_TYPE_VALUETYPE:
                     {
                         var typeDef = executor.GetTypeDefinitionFromIl2CppType(il2CppType);
-                        return !typeDef.IsEnum;
+                        return !typeDef.bitfield.EnumType;
                     }
                 case Il2CppTypeEnum.IL2CPP_TYPE_GENERICINST:
                     {
                         var genericClass = il2Cpp.MapVATR<Il2CppGenericClass>(il2CppType.data.generic_class);
                         var typeDef = executor.GetGenericClassTypeDefinition(genericClass);
-                        return typeDef.IsValueType && !typeDef.IsEnum;
+                        return typeDef.bitfield.ValueType && !typeDef.bitfield.EnumType;
                     }
                 case Il2CppTypeEnum.IL2CPP_TYPE_VAR:
                     {
                         if (context != null)
                         {
-                            var genericParameter = executor.GetGenericParameteFromIl2CppType(il2CppType);
+                            var genericParameter = executor.GetGenericParameterFromIl2CppType(il2CppType);
                             var genericInst = il2Cpp.MapVATR<Il2CppGenericInst>(context.class_inst);
                             var pointers = il2Cpp.MapVATR<ulong>(genericInst.type_argv, genericInst.type_argc);
                             var pointer = pointers[genericParameter.num];
@@ -1253,7 +1253,7 @@ namespace Il2CppDumper
                     {
                         if (context != null)
                         {
-                            var genericParameter = executor.GetGenericParameteFromIl2CppType(il2CppType);
+                            var genericParameter = executor.GetGenericParameterFromIl2CppType(il2CppType);
                             var genericInst = il2Cpp.MapVATR<Il2CppGenericInst>(context.method_inst);
                             var pointers = il2Cpp.MapVATR<ulong>(genericInst.type_argv, genericInst.type_argc);
                             var pointer = pointers[genericParameter.num];
@@ -1286,7 +1286,7 @@ namespace Il2CppDumper
                 case Il2CppTypeEnum.IL2CPP_TYPE_VALUETYPE:
                     {
                         var typeDef = executor.GetTypeDefinitionFromIl2CppType(il2CppType);
-                        if (typeDef.IsEnum)
+                        if (typeDef.bitfield.EnumType)
                         {
                             return IsCustomType(il2Cpp.types[typeDef.elementTypeIndex], context);
                         }
@@ -1296,7 +1296,7 @@ namespace Il2CppDumper
                     {
                         var genericClass = il2Cpp.MapVATR<Il2CppGenericClass>(il2CppType.data.generic_class);
                         var typeDef = executor.GetGenericClassTypeDefinition(genericClass);
-                        if (typeDef.IsEnum)
+                        if (typeDef.bitfield.EnumType)
                         {
                             return IsCustomType(il2Cpp.types[typeDef.elementTypeIndex], context);
                         }
@@ -1306,7 +1306,7 @@ namespace Il2CppDumper
                     {
                         if (context != null)
                         {
-                            var genericParameter = executor.GetGenericParameteFromIl2CppType(il2CppType);
+                            var genericParameter = executor.GetGenericParameterFromIl2CppType(il2CppType);
                             var genericInst = il2Cpp.MapVATR<Il2CppGenericInst>(context.class_inst);
                             var pointers = il2Cpp.MapVATR<ulong>(genericInst.type_argv, genericInst.type_argc);
                             var pointer = pointers[genericParameter.num];
@@ -1319,7 +1319,7 @@ namespace Il2CppDumper
                     {
                         if (context != null)
                         {
-                            var genericParameter = executor.GetGenericParameteFromIl2CppType(il2CppType);
+                            var genericParameter = executor.GetGenericParameterFromIl2CppType(il2CppType);
                             var genericInst = il2Cpp.MapVATR<Il2CppGenericInst>(context.method_inst);
                             var pointers = il2Cpp.MapVATR<ulong>(genericInst.type_argv, genericInst.type_argc);
                             var pointer = pointers[genericParameter.num];
