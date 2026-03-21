@@ -495,6 +495,11 @@ public class StructGenerator
             case 31:
                 sb.Append(HeaderConstants.HeaderV29);
                 break;
+            // TODO: unchecked headers likely invalids !
+            case 34:
+            case 39:
+                sb.Append(HeaderConstants.HeaderV29);
+                break;
             default:
                 Console.WriteLine(
                     $"WARNING: This il2cpp version [{il2Cpp.Version}] does not support generating .h files");
@@ -1441,12 +1446,32 @@ public class StructGenerator
                 {
                     if (context != null)
                     {
-                        var genericParameter = executor.GetGenericParameterFromIl2CppType(il2CppType);
-                        var genericInst = il2Cpp.MapVATR<Il2CppGenericInst>(context.method_inst);
-                        var pointers = il2Cpp.MapVATR<ulong>(genericInst.type_argv, genericInst.type_argc);
-                        var pointer = pointers[genericParameter.num];
-                        var type = il2Cpp.GetIl2CppType(pointer);
-                        return IsCustomType(type, null);
+                        if (context.class_inst > 0)
+                        {
+                            var typeDef = executor.GetTypeDefinitionFromIl2CppType(il2CppType);
+                            var fieldEnd = typeDef.fieldStart + typeDef.field_count;
+                            for (var i = typeDef.fieldStart; i < fieldEnd; i++)
+                            {
+                                var fieldDef = metadata.fieldDefs[i];
+                                var name = metadata.GetStringFromIndex(fieldDef.nameIndex);
+
+                                if (name == "value__")
+                                {
+                                    var fieldType = il2Cpp.types[fieldDef.typeIndex];
+
+                                    return IsCustomType(fieldType, null);
+                                }
+                            }
+                        }
+                        else if (context.method_inst > 0)
+                        {
+                            var genericParameter = executor.GetGenericParameterFromIl2CppType(il2CppType);
+                            var genericInst = il2Cpp.MapVATR<Il2CppGenericInst>(context.method_inst);
+                            var pointers = il2Cpp.MapVATR<ulong>(genericInst.type_argv, genericInst.type_argc);
+                            var pointer = pointers[genericParameter.num];
+                            var type = il2Cpp.GetIl2CppType(pointer);
+                            return IsCustomType(type, null);
+                        }
                     }
 
                     return false;
