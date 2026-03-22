@@ -445,12 +445,9 @@ public class StructGenerator
         {
             jsonOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
         }
-        File.WriteAllText(
-            outputDir + "stringliteral.json",
-            JsonSerializer.Serialize(stringLiterals, jsonOptions),
-            new UTF8Encoding(false));
+        File.WriteAllText(Path.Combine(outputDir, "stringliteral.json"), JsonSerializer.Serialize(stringLiterals, jsonOptions), new UTF8Encoding(false));
         //写入文件
-        using (var stream = new FileStream(outputDir + "script.json",FileMode.Create))
+        using (var stream = new FileStream(Path.Combine(outputDir, "script.json"), FileMode.Create))
         {
             JsonSerializer.Serialize(stream, json, jsonOptions);
         }
@@ -517,7 +514,7 @@ public class StructGenerator
         sb.Append(arrayClassHeader);
         sb.Append(methodInfoHeader);
         int bufferSize = 4096;
-        using (StreamWriter writer = new StreamWriter(outputDir + "il2cpp.h", false, Encoding.UTF8, bufferSize))
+        using (StreamWriter writer = new StreamWriter(Path.Combine(outputDir, "il2cpp.h"), false, Encoding.UTF8, bufferSize))
         {
             int index = 0;
             int length = sb.Length;

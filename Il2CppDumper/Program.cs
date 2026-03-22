@@ -13,8 +13,7 @@ internal class Program
     [STAThread]
     private static void Main(string[] args)
     {
-        config = JsonSerializer.Deserialize<Config>(
-            File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + @"config.json"));
+        config = JsonSerializer.Deserialize<Config>(File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json")));
         GenerateReplaceNameMap();
         string il2cppPath = null;
         string metadataPath = null;
@@ -29,8 +28,9 @@ internal class Program
             }
         }
 
-        if (args.Length > 3)
+        if (args.Length < 3)
         {
+            Console.WriteLine("ERROR: Not enough arguments.");
             ShowHelp();
             return;
         }
@@ -41,8 +41,12 @@ internal class Program
             {
                 if (File.Exists(arg))
                 {
-                    var file = File.ReadAllBytes(arg);
-                    if (BitConverter.ToUInt32(file, 0) == 0xFAB11BAF)
+                    UInt32 magicBytes = 0;
+                    using (FileStream fileStream = File.OpenRead(arg))
+                    {
+                        magicBytes = new BinaryReader(fileStream).ReadUInt32();
+                    }
+                    if (magicBytes == 0xFAB11BAF)
                     {
                         metadataPath = arg;
                     }
@@ -58,41 +62,29 @@ internal class Program
             }
         }
 
-        outputDir ??= AppDomain.CurrentDomain.BaseDirectory;
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (string.IsNullOrEmpty(outputDir) || !Directory.Exists(outputDir))
         {
-            if (il2cppPath == null)
+            Console.WriteLine("ERROR: The specified output folder does not exist.");
+            ShowHelp();
+            return;
+        }
+        outputDir = Path.GetFullPath(outputDir) + Path.DirectorySeparatorChar;
+        {
+            if (il2cppPath == null || metadataPath == null)
             {
-                var ofd = new OpenFileDialog { Filter = "Il2Cpp binary file|*.*" };
-                if (ofd.ShowDialog())
-                {
-                    il2cppPath = ofd.FileName;
-                    ofd.Filter = "global-metadata|global-metadata.dat";
-                    if (ofd.ShowDialog())
-                    {
-                        metadataPath = ofd.FileName;
-                    }
-                    else
-                    {
-                        return;
-                    }
-                }
-                else
-                {
-                    return;
-                }
+                Console.WriteLine("ERROR: Missing required input files.");
+                ShowHelp();
+                return;
             }
         }
-
         if (il2cppPath == null)
         {
             ShowHelp();
             return;
         }
-
         if (metadataPath == null)
         {
-            Console.WriteLine("ERROR: Metadata file not found or encrypted.");
+            Console.WriteLine($"ERROR: Metadata file not found or encrypted.");
         }
         else
         {
@@ -147,8 +139,8 @@ internal class Program
     private static bool Init(string il2cppPath, string metadataPath, out Metadata metadata, out Il2Cpp il2Cpp)
     {
         Console.WriteLine("Initializing metadata...");
-        var metadataBytes = File.ReadAllBytes(metadataPath);
-        metadata = new Metadata(new MemoryStream(metadataBytes));
+        var metadataStream = File.OpenRead(metadataPath);
+        metadata = new Metadata(metadataStream);
         Console.WriteLine($"Metadata Version: {metadata.Version}");
 
         Console.WriteLine("Initializing il2cpp file...");
