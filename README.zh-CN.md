@@ -4,6 +4,9 @@
 
 Unity il2cpp逆向工程
 
+## 本fork的新增功能
+* 完整支持MachO64加载命令`LC_DYLD_CHAINED_FIXUPS`以更好兼容需要iOS15及以上版本的应用程序
+
 ## 功能
 
 * 还原DLL文件（不包含代码），可用于提取`MonoBehaviour`和`MonoScript`

@@ -6,6 +6,9 @@
 
 Unity il2cpp reverse engineer
 
+## What's new in this fork
+* Fully supports MachO64 load command `LC_DYLD_CHAINED_FIXUPS` for Apps required iOS 15 and above (refer to [LIEF](https://github.com/lief-project/LIEF))
+
 ## Disclaimer
 
 This fork updates Il2CppDumper to correctly support Metadata v38 and above (up to v39/Unity 6000.x).
