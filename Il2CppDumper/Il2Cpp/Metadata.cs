@@ -63,6 +63,11 @@ public sealed class Metadata : BinaryStream
         Version = version;
         header = ReadClass<Il2CppGlobalMetadataHeader>(0);
 
+        if (stream.Position != header.stringLiteralOffset)
+        {
+            Console.WriteLine($"WARNING: Metadata header size does not match declared version {version}, version might be incorrect.");
+        }
+
         GenericContainerIndex.Size = IndexSize.Default;
         TypeDefinitionIndex.Size = IndexSize.Default;
         TypeIndex.Size = IndexSize.Default;
