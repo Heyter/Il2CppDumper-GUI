@@ -62,8 +62,8 @@ public class Il2CppDecompiler
                             extends.Add(executor.GetTypeName(@interface, false, false));
                         }
                     }
-
-                    writer.Write($"\n// Namespace: {metadata.GetStringFromIndex(typeDef.namespaceIndex)}\n");
+                    writer.Write($"\n// DLL: {imageName}");
+                    writer.Write($"\n// Namespace: `{metadata.GetStringFromIndex(typeDef.namespaceIndex)}`\n");
                     if (config.DumpAttribute)
                     {
                         writer.Write(GetCustomAttribute(imageDef, typeDef.customAttributeIndex, typeDef.token));
