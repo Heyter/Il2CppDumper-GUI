@@ -345,6 +345,18 @@ public sealed class Metadata : BinaryStream
         {
             var offset = Version >= 36 ? header.strings.offset : header.stringOffset;
             result = ReadStringToNull((ulong)offset + index);
+
+            string szReplaceToName = null;
+            if (result != null)
+            {
+                szReplaceToName = Il2CppDumper.Program.TryGetReplaceName(result);
+            }
+
+            if (szReplaceToName != null)
+            {
+                result = szReplaceToName;
+            }
+
             stringCache.Add(index, result);
         }
 
