@@ -37,6 +37,7 @@ jobs:
       PROJECT_PATH: Il2CppDumper/Il2CppDumper.csproj
       PROJECT_DIR: Il2CppDumper
       CONFIGURATION: Release
+      TARGET_FRAMEWORK: net10.0
       RUNTIME: win-x64
 
     defaults:
@@ -95,12 +96,15 @@ jobs:
           "is_draft=$isDraft" >> $env:GITHUB_OUTPUT
 
       - name: Restore
-        run: dotnet restore $env:PROJECT_PATH
+        run: >
+          dotnet restore $env:PROJECT_PATH
+          -r $env:RUNTIME
 
       - name: Publish
         run: >
           dotnet publish $env:PROJECT_PATH
           -c $env:CONFIGURATION
+          -f $env:TARGET_FRAMEWORK
           -r $env:RUNTIME
           --self-contained true
           --no-restore
