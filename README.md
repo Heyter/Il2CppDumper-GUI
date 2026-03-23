@@ -1,13 +1,46 @@
 # Il2CppDumper
 
-[![Build status](https://ci.appveyor.com/api/projects/status/anhqw33vcpmp8ofa?svg=true)](https://ci.appveyor.com/project/Perfare/il2cppdumper/branch/master/artifacts)
+A bundled Il2CppDumper build with a launcher, shared configuration, shared helper scripts, and separate inner 32-bit / 64-bit runtimes.
 
-中文说明请戳[这里](README.zh-CN.md)
+This project is designed to make common dumping workflows easier:
 
-Unity il2cpp reverse engineer
+- run a single launcher from the archive root
+- keep one shared `config.json`
+- keep helper scripts in one shared `scripts/` folder
+- keep separate internal runtimes for 32-bit and 64-bit targets
+- support both GUI and CLI workflows
+- auto-select the correct runtime for many Android APK use cases
 
 ## What's new in this fork
 * Fully supports MachO64 load command `LC_DYLD_CHAINED_FIXUPS` for Apps required iOS 15 and above (refer to [LIEF](https://github.com/lief-project/LIEF))
+
+## What this bundle adds
+
+Compared with a plain single-executable layout, this bundle adds:
+
+- **Root launcher**
+  - `Il2CppDumper.exe` in the archive root
+  - launches the correct inner dumper automatically
+
+- **Shared configuration**
+  - one root-level `config.json`
+  - used by the launcher and inner dumpers
+
+- **Shared helper scripts**
+  - one root-level `scripts/` directory
+  - avoids duplicating the same Python scripts in both x86 and x64 runtimes
+
+- **Separated inner runtimes**
+  - `bin32bit/`
+  - `bin64bit/`
+
+- **Architecture-aware launching**
+  - automatic runtime selection in **Auto** mode
+  - manual override for **32-bit** or **64-bit**
+
+- **Friendlier workflow**
+  - GUI launcher for interactive use
+  - CLI launcher for scripted use
 
 ## Disclaimer
 
@@ -36,6 +69,13 @@ The program will then generate all the output files in current working directory
 
 ```
 Il2CppDumper.exe <executable-file> <global-metadata> <output-directory>
+Il2CppDumper.exe --auto <input-file> <global-metadata.dat> <output-directory>
+Il2CppDumper.exe --32 <input-file> <global-metadata.dat> <output-directory>
+Il2CppDumper.exe --64 <input-file> <global-metadata.dat> <output-directory>
+
+Il2CppDumper.exe --arch auto <input-file> <global-metadata.dat> <output-directory>
+Il2CppDumper.exe --arch 32   <input-file> <global-metadata.dat> <output-directory>
+Il2CppDumper.exe --arch 64   <input-file> <global-metadata.dat> <output-directory>
 ```
 
 ### Outputs
@@ -123,6 +163,25 @@ You can open a new issue and upload the file, I will try to solve.
 Il2CppDumper detected that the executable file has been protected, use `GameGuardian` to dump `libil2cpp.so` from the game memory, then use Il2CppDumper to load and follow the prompts, can bypass most protections.
 
 If you have a rooted Android phone, you can try my other project [Zygisk-Il2CppDumper](https://github.com/Perfare/Zygisk-Il2CppDumper), it can bypass almost all protections.
+
+## Archive layout
+
+```text
+Il2CppDumper.exe
+config.json
+scripts/
+  ghidra.py
+  ghidra_wasm.py
+  ghidra_with_struct.py
+  ida.py
+  ida_py3.py
+  ida_with_struct.py
+  ida_with_struct_py3.py
+  il2cpp_header_to_ghidra.py
+bin32bit/
+  Il2CppDumper.exe
+bin64bit/
+  Il2CppDumper.exe
 
 ## Credits
 
