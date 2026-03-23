@@ -142,11 +142,34 @@ internal class Program
             return;
         }
 
-        var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+        var configPath = ResolveConfigPath();
         config = JsonSerializer.Deserialize<Config>(File.ReadAllText(configPath))
                  ?? throw new InvalidOperationException("config.json could not be loaded.");
 
         GenerateReplaceNameMap();
+    }
+
+    private static string ResolveConfigPath()
+    {
+        var envPath = Environment.GetEnvironmentVariable("IL2CPPDUMPER_CONFIG_PATH");
+        if (!string.IsNullOrWhiteSpace(envPath) && File.Exists(envPath))
+        {
+            return envPath;
+        }
+
+        var localPath = Path.Combine(AppContext.BaseDirectory, "config.json");
+        if (File.Exists(localPath))
+        {
+            return localPath;
+        }
+
+        var parentPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "config.json"));
+        if (File.Exists(parentPath))
+        {
+            return parentPath;
+        }
+
+        throw new FileNotFoundException("config.json not found.");
     }
 
     private static void WriteLine(string message)
@@ -176,6 +199,7 @@ internal class Program
         {
             config.ReplaceHashNameMap.TryGetValue(szTargetName, out szRet);
         }
+
         return szRet;
     }
 
@@ -212,7 +236,7 @@ internal class Program
             case 0x905A4D: //PE
                 il2Cpp = new PE(il2CppMemory);
                 break;
-            case 0x464c457f: //ELF
+            case 0x464C457F: //ELF
                 if (il2cppBytes[4] == 2) //ELF64
                 {
                     il2Cpp = new Elf64(il2CppMemory);
@@ -235,6 +259,7 @@ internal class Program
                         break;
                     }
                 }
+
                 WriteLine($"Auto-selected: {(machofat.fats[index].magic == 0xFEEDFACF ? "64bit" : "32bit")}");
                 var magic = machofat.fats[index].magic;
                 il2cppBytes = machofat.GetMacho(index);
@@ -256,6 +281,7 @@ internal class Program
         var version = config.ForceIl2CppVersion ? config.ForceVersion : metadata.Version;
         il2Cpp.SetProperties(version, metadata.metadataUsagesCount);
         WriteLine($"Il2Cpp Version: {il2Cpp.Version}");
+
         if (config.ForceDump || il2Cpp.CheckDump())
         {
             if (il2Cpp is ElfBase elf)

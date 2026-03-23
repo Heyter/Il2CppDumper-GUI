@@ -1,4 +1,4 @@
-name: Build GUI
+name: Build Launcher Bundle
 
 on:
   workflow_dispatch:
@@ -12,17 +12,16 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-inner:
     runs-on: windows-latest
-
     strategy:
       fail-fast: false
       matrix:
         include:
           - rid: win-x86
-            arch: x86
+            folder: bin32bit
           - rid: win-x64
-            arch: x64
+            folder: bin64bit
 
     env:
       PROJECT_PATH: Il2CppDumper/Il2CppDumper.csproj
@@ -42,27 +41,7 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Resolve metadata
-        id: meta
-        run: |
-          $tag = "${{ github.event.inputs.tag }}"
-          if ([string]::IsNullOrWhiteSpace($tag)) {
-            $tag = "build-${{ github.run_number }}"
-          }
-
-          $publishDir = Join-Path $env:RUNNER_TEMP "publish\${{ matrix.rid }}"
-          $zipName = "Il2CppDumper-GUI-${{ matrix.rid }}-$tag.zip"
-          $zipPath = Join-Path $env:RUNNER_TEMP $zipName
-
-          "tag=$tag" >> $env:GITHUB_OUTPUT
-          "publish_dir=$publishDir" >> $env:GITHUB_OUTPUT
-          "zip_name=$zipName" >> $env:GITHUB_OUTPUT
-          "zip_path=$zipPath" >> $env:GITHUB_OUTPUT
-
-      - name: Restore
-        run: dotnet restore $env:PROJECT_PATH -r ${{ matrix.rid }}
-
-      - name: Publish
+      - name: Publish inner app
         run: >
           dotnet publish $env:PROJECT_PATH
           -c $env:CONFIGURATION
@@ -71,29 +50,66 @@ jobs:
           --self-contained true
           -p:PublishSingleFile=true
           -p:EnableCompressionInSingleFile=true
-          --no-restore
-          -o "${{ steps.meta.outputs.publish_dir }}"
+          -o "${{ runner.temp }}\${{ matrix.folder }}"
 
-      - name: Create zip
+      - name: Remove duplicated config from inner app
         run: |
-          $publishDir = "${{ steps.meta.outputs.publish_dir }}"
-          $zipPath = "${{ steps.meta.outputs.zip_path }}"
-
-          if (Test-Path $zipPath) {
-            Remove-Item $zipPath -Force
+          $configPath = Join-Path "${{ runner.temp }}\${{ matrix.folder }}" "config.json"
+          if (Test-Path $configPath) {
+            Remove-Item $configPath -Force
           }
 
-          Compress-Archive -Path (Join-Path $publishDir '*') -DestinationPath $zipPath -Force
-
-      - name: Upload build artifact
+      - name: Upload inner artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Il2CppDumper-GUI-${{ matrix.rid }}-${{ steps.meta.outputs.tag }}
-          path: ${{ steps.meta.outputs.zip_path }}
+          name: inner-${{ matrix.folder }}
+          path: ${{ runner.temp }}\${{ matrix.folder }}
           if-no-files-found: error
 
-  release:
-    needs: build
+  build-launcher:
+    runs-on: windows-latest
+
+    env:
+      PROJECT_PATH: Launcher/Launcher.csproj
+      CONFIGURATION: Release
+      TARGET_FRAMEWORK: net10.0-windows
+      RUNTIME: win-x86
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish launcher
+        run: >
+          dotnet publish $env:PROJECT_PATH
+          -c $env:CONFIGURATION
+          -f $env:TARGET_FRAMEWORK
+          -r $env:RUNTIME
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:EnableCompressionInSingleFile=true
+          -o "${{ runner.temp }}\launcher"
+
+      - name: Upload launcher artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: launcher-root
+          path: ${{ runner.temp }}\launcher
+          if-no-files-found: error
+
+  package-release:
+    needs:
+      - build-inner
+      - build-launcher
     runs-on: windows-latest
 
     defaults:
@@ -101,7 +117,10 @@ jobs:
         shell: pwsh
 
     steps:
-      - name: Resolve metadata
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Resolve release metadata
         id: meta
         run: |
           $tag = "${{ github.event.inputs.tag }}"
@@ -109,42 +128,73 @@ jobs:
             $tag = "build-${{ github.run_number }}"
           }
 
-          $bundleZip = Join-Path $env:RUNNER_TEMP "Il2CppDumper-GUI-win-x86-win-x64-$tag.zip"
+          $packageDir = Join-Path $env:RUNNER_TEMP "package"
+          $zipName = "Il2CppDumper-launcher-bundle-$tag.zip"
+          $zipPath = Join-Path $env:RUNNER_TEMP $zipName
 
           "tag=$tag" >> $env:GITHUB_OUTPUT
-          "bundle_zip=$bundleZip" >> $env:GITHUB_OUTPUT
+          "package_dir=$packageDir" >> $env:GITHUB_OUTPUT
+          "zip_name=$zipName" >> $env:GITHUB_OUTPUT
+          "zip_path=$zipPath" >> $env:GITHUB_OUTPUT
 
-      - name: Download build artifacts
+      - name: Download launcher artifact
         uses: actions/download-artifact@v4
         with:
-          path: ${{ runner.temp }}\release-assets
+          name: launcher-root
+          path: ${{ runner.temp }}\download\launcher-root
 
-      - name: Create bundle zip
+      - name: Download x86 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: inner-bin32bit
+          path: ${{ runner.temp }}\download\bin32bit
+
+      - name: Download x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: inner-bin64bit
+          path: ${{ runner.temp }}\download\bin64bit
+
+      - name: Assemble bundle
         run: |
-          $downloadRoot = Join-Path $env:RUNNER_TEMP "release-assets"
-          $bundleDir = Join-Path $env:RUNNER_TEMP "bundle"
-          $bundleZip = "${{ steps.meta.outputs.bundle_zip }}"
+          $packageDir = "${{ steps.meta.outputs.package_dir }}"
+          $launcherDir = "${{ runner.temp }}\download\launcher-root"
+          $bin32Src = "${{ runner.temp }}\download\bin32bit"
+          $bin64Src = "${{ runner.temp }}\download\bin64bit"
 
-          if (Test-Path $bundleDir) {
-            Remove-Item $bundleDir -Recurse -Force
+          if (Test-Path $packageDir) {
+            Remove-Item $packageDir -Recurse -Force
           }
 
-          New-Item -ItemType Directory -Path $bundleDir | Out-Null
+          New-Item -ItemType Directory -Path $packageDir | Out-Null
+          New-Item -ItemType Directory -Path (Join-Path $packageDir "bin32bit") | Out-Null
+          New-Item -ItemType Directory -Path (Join-Path $packageDir "bin64bit") | Out-Null
 
-          Get-ChildItem -Path $downloadRoot -Recurse -File -Filter *.zip |
-            Copy-Item -Destination $bundleDir -Force
+          Copy-Item (Join-Path $launcherDir "*") -Destination $packageDir -Recurse -Force
+          Copy-Item "Il2CppDumper\config.json" -Destination (Join-Path $packageDir "config.json") -Force
 
-          if (Test-Path $bundleZip) {
-            Remove-Item $bundleZip -Force
+          Copy-Item (Join-Path $bin32Src "*") -Destination (Join-Path $packageDir "bin32bit") -Recurse -Force
+          Copy-Item (Join-Path $bin64Src "*") -Destination (Join-Path $packageDir "bin64bit") -Recurse -Force
+
+          Remove-Item (Join-Path $packageDir "bin32bit\config.json") -Force -ErrorAction SilentlyContinue
+          Remove-Item (Join-Path $packageDir "bin64bit\config.json") -Force -ErrorAction SilentlyContinue
+
+      - name: Create zip
+        run: |
+          $packageDir = "${{ steps.meta.outputs.package_dir }}"
+          $zipPath = "${{ steps.meta.outputs.zip_path }}"
+
+          if (Test-Path $zipPath) {
+            Remove-Item $zipPath -Force
           }
 
-          Compress-Archive -Path (Join-Path $bundleDir '*') -DestinationPath $bundleZip -Force
+          Compress-Archive -Path (Join-Path $packageDir '*') -DestinationPath $zipPath -Force
 
       - name: Upload bundle artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Il2CppDumper-GUI-win-x86-win-x64-${{ steps.meta.outputs.tag }}.zip
-          path: ${{ steps.meta.outputs.bundle_zip }}
+          name: bundle-${{ steps.meta.outputs.tag }}
+          path: ${{ steps.meta.outputs.zip_path }}
           if-no-files-found: error
 
       - name: Create or update GitHub Release
@@ -153,29 +203,19 @@ jobs:
         run: |
           $repo = "${{ github.repository }}"
           $tag = "${{ steps.meta.outputs.tag }}"
-
-          $assets = @(Get-ChildItem -Path (Join-Path $env:RUNNER_TEMP "release-assets") -Recurse -Filter *.zip | ForEach-Object { $_.FullName })
-          $assets += "${{ steps.meta.outputs.bundle_zip }}"
+          $zipPath = "${{ steps.meta.outputs.zip_path }}"
 
           gh release view $tag --repo $repo *> $null
           $exists = $LASTEXITCODE -eq 0
 
           if (-not $exists) {
-            $args = @(
-              "release", "create", $tag,
-              "--repo", $repo,
-              "--title", $tag,
-              "--generate-notes"
-            )
-            $args += $assets
-            gh @args
+            gh release create $tag $zipPath `
+              --repo $repo `
+              --title $tag `
+              --generate-notes
           }
           else {
-            $args = @(
-              "release", "upload", $tag,
-              "--repo", $repo,
-              "--clobber"
-            )
-            $args += $assets
-            gh @args
+            gh release upload $tag $zipPath `
+              --repo $repo `
+              --clobber
           }
