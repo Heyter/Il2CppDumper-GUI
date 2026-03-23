@@ -88,7 +88,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.meta.outputs.zip_name }}
+          name: Il2CppDumper-GUI-${{ matrix.rid }}-${{ steps.meta.outputs.tag }}
           path: ${{ steps.meta.outputs.zip_path }}
           if-no-files-found: error
 
@@ -131,7 +131,7 @@ jobs:
 
           New-Item -ItemType Directory -Path $bundleDir | Out-Null
 
-          Get-ChildItem -Path $downloadRoot -Recurse -Filter *.zip |
+          Get-ChildItem -Path $downloadRoot -Recurse -File -Filter *.zip |
             Copy-Item -Destination $bundleDir -Force
 
           if (Test-Path $bundleZip) {
