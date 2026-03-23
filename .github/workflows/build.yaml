@@ -1,4 +1,4 @@
-name: Build
+name: Build GUI
 
 on:
   workflow_dispatch:
@@ -7,38 +7,27 @@ on:
         description: 'Release tag. Empty = build-<run_number>'
         required: false
         default: ''
-      prerelease:
-        description: 'Mark release as prerelease'
-        type: boolean
-        required: false
-        default: false
-      draft:
-        description: 'Create draft release'
-        type: boolean
-        required: false
-        default: false
-
-  push:
-    tags:
-      - 'v*'
 
 permissions:
   contents: write
 
-concurrency:
-  group: build-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
-  build-win-x64:
+  build:
     runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x86
+            arch: x86
+          - rid: win-x64
+            arch: x64
 
     env:
       PROJECT_PATH: Il2CppDumper/Il2CppDumper.csproj
-      PROJECT_DIR: Il2CppDumper
       CONFIGURATION: Release
-      TARGET_FRAMEWORK: net10.0
-      RUNTIME: win-x64
+      TARGET_FRAMEWORK: net10.0-windows
 
     defaults:
       run:
@@ -47,121 +36,43 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - name: Setup .NET 10 SDK
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
-      - name: Resolve release metadata
+      - name: Resolve metadata
         id: meta
         run: |
-          $tag = ""
-
-          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
-            $tag = "${{ github.event.inputs.tag }}"
-          }
-          elseif ("${{ github.ref_type }}" -eq "tag") {
-            $tag = "${{ github.ref_name }}"
-          }
-
+          $tag = "${{ github.event.inputs.tag }}"
           if ([string]::IsNullOrWhiteSpace($tag)) {
             $tag = "build-${{ github.run_number }}"
           }
 
-          $publishDir = Join-Path $env:RUNNER_TEMP "publish\Il2CppDumper-win-x64"
-          $zipName = "Il2CppDumper-win-x64-$tag.zip"
+          $publishDir = Join-Path $env:RUNNER_TEMP "publish\${{ matrix.rid }}"
+          $zipName = "Il2CppDumper-GUI-${{ matrix.rid }}-$tag.zip"
           $zipPath = Join-Path $env:RUNNER_TEMP $zipName
-
-          $isPrerelease = "false"
-          $isDraft = "false"
-
-          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
-            if ("${{ github.event.inputs.prerelease }}" -eq "true") {
-              $isPrerelease = "true"
-            }
-
-            if ("${{ github.event.inputs.draft }}" -eq "true") {
-              $isDraft = "true"
-            }
-          }
 
           "tag=$tag" >> $env:GITHUB_OUTPUT
           "publish_dir=$publishDir" >> $env:GITHUB_OUTPUT
           "zip_name=$zipName" >> $env:GITHUB_OUTPUT
           "zip_path=$zipPath" >> $env:GITHUB_OUTPUT
-          "is_prerelease=$isPrerelease" >> $env:GITHUB_OUTPUT
-          "is_draft=$isDraft" >> $env:GITHUB_OUTPUT
 
       - name: Restore
-        run: >
-          dotnet restore $env:PROJECT_PATH
-          -r $env:RUNTIME
+        run: dotnet restore $env:PROJECT_PATH -r ${{ matrix.rid }}
 
       - name: Publish
         run: >
           dotnet publish $env:PROJECT_PATH
           -c $env:CONFIGURATION
           -f $env:TARGET_FRAMEWORK
-          -r $env:RUNTIME
+          -r ${{ matrix.rid }}
           --self-contained true
+          -p:PublishSingleFile=true
+          -p:EnableCompressionInSingleFile=true
           --no-restore
           -o "${{ steps.meta.outputs.publish_dir }}"
-
-      - name: Stage required content files
-        run: |
-          $publishDir = "${{ steps.meta.outputs.publish_dir }}"
-          $projectDir = Join-Path $env:GITHUB_WORKSPACE $env:PROJECT_DIR
-
-          $files = @(
-            "config.json",
-            "ghidra.py",
-            "ghidra_wasm.py",
-            "ghidra_with_struct.py",
-            "ida.py",
-            "ida_py3.py",
-            "ida_with_struct.py",
-            "ida_with_struct_py3.py",
-            "il2cpp_header_to_ghidra.py"
-          )
-
-          foreach ($file in $files) {
-            $source = Join-Path $projectDir $file
-            $destination = Join-Path $publishDir $file
-
-            if (-not (Test-Path $source)) {
-              throw "Required source file not found: $source"
-            }
-
-            Copy-Item $source -Destination $destination -Force
-          }
-
-      - name: Verify build output
-        run: |
-          $publishDir = "${{ steps.meta.outputs.publish_dir }}"
-          $required = @(
-            "Il2CppDumper.exe",
-            "config.json",
-            "ghidra.py",
-            "ghidra_wasm.py",
-            "ghidra_with_struct.py",
-            "ida.py",
-            "ida_py3.py",
-            "ida_with_struct.py",
-            "ida_with_struct_py3.py",
-            "il2cpp_header_to_ghidra.py"
-          )
-
-          foreach ($file in $required) {
-            $path = Join-Path $publishDir $file
-            if (-not (Test-Path $path)) {
-              throw "Missing expected file: $file"
-            }
-          }
-
-          Get-ChildItem $publishDir | Select-Object Name, Length
 
       - name: Create zip
         run: |
@@ -174,45 +85,97 @@ jobs:
 
           Compress-Archive -Path (Join-Path $publishDir '*') -DestinationPath $zipPath -Force
 
-      - name: Upload workflow artifact
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.meta.outputs.zip_name }}
           path: ${{ steps.meta.outputs.zip_path }}
           if-no-files-found: error
 
+  release:
+    needs: build
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Resolve metadata
+        id: meta
+        run: |
+          $tag = "${{ github.event.inputs.tag }}"
+          if ([string]::IsNullOrWhiteSpace($tag)) {
+            $tag = "build-${{ github.run_number }}"
+          }
+
+          $bundleZip = Join-Path $env:RUNNER_TEMP "Il2CppDumper-GUI-win-x86-win-x64-$tag.zip"
+
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "bundle_zip=$bundleZip" >> $env:GITHUB_OUTPUT
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}\release-assets
+
+      - name: Create bundle zip
+        run: |
+          $downloadRoot = Join-Path $env:RUNNER_TEMP "release-assets"
+          $bundleDir = Join-Path $env:RUNNER_TEMP "bundle"
+          $bundleZip = "${{ steps.meta.outputs.bundle_zip }}"
+
+          if (Test-Path $bundleDir) {
+            Remove-Item $bundleDir -Recurse -Force
+          }
+
+          New-Item -ItemType Directory -Path $bundleDir | Out-Null
+
+          Get-ChildItem -Path $downloadRoot -Recurse -Filter *.zip |
+            Copy-Item -Destination $bundleDir -Force
+
+          if (Test-Path $bundleZip) {
+            Remove-Item $bundleZip -Force
+          }
+
+          Compress-Archive -Path (Join-Path $bundleDir '*') -DestinationPath $bundleZip -Force
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Il2CppDumper-GUI-win-x86-win-x64-${{ steps.meta.outputs.tag }}.zip
+          path: ${{ steps.meta.outputs.bundle_zip }}
+          if-no-files-found: error
+
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.meta.outputs.tag }}
-          ZIP_PATH: ${{ steps.meta.outputs.zip_path }}
-          IS_PRERELEASE: ${{ steps.meta.outputs.is_prerelease }}
-          IS_DRAFT: ${{ steps.meta.outputs.is_draft }}
         run: |
           $repo = "${{ github.repository }}"
+          $tag = "${{ steps.meta.outputs.tag }}"
 
-          gh release view $env:TAG --repo $repo *> $null
-          $releaseExists = $LASTEXITCODE -eq 0
+          $assets = @(Get-ChildItem -Path (Join-Path $env:RUNNER_TEMP "release-assets") -Recurse -Filter *.zip | ForEach-Object { $_.FullName })
+          $assets += "${{ steps.meta.outputs.bundle_zip }}"
 
-          if (-not $releaseExists) {
+          gh release view $tag --repo $repo *> $null
+          $exists = $LASTEXITCODE -eq 0
+
+          if (-not $exists) {
             $args = @(
-              "release", "create", $env:TAG, $env:ZIP_PATH,
+              "release", "create", $tag,
               "--repo", $repo,
-              "--target", "${{ github.sha }}",
-              "--title", $env:TAG,
+              "--title", $tag,
               "--generate-notes"
             )
-
-            if ($env:IS_PRERELEASE -eq "true") {
-              $args += "--prerelease"
-            }
-
-            if ($env:IS_DRAFT -eq "true") {
-              $args += "--draft"
-            }
-
+            $args += $assets
             gh @args
           }
           else {
-            gh release upload $env:TAG $env:ZIP_PATH --repo $repo --clobber
+            $args = @(
+              "release", "upload", $tag,
+              "--repo", $repo,
+              "--clobber"
+            )
+            $args += $assets
+            gh @args
           }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,11 +9,12 @@ namespace Il2CppDumper;
 
 public class BinaryStream : IDisposable
 {
-    private readonly Dictionary<FieldInfo, VersionAttribute[]> attributeCache;
+    private readonly Dictionary<FieldInfo, object[]> attributeCache;
     private readonly Dictionary<Type, MethodInfo> genericMethodCache;
     private readonly MethodInfo readClass;
     private readonly MethodInfo readClassArray;
     private readonly Stream stream;
+
     public ulong ImageBase;
     public bool Is32Bit;
     public double Version;
@@ -22,13 +23,15 @@ public class BinaryStream : IDisposable
     {
         stream = input;
         Reader = new BinaryReader(stream, Encoding.UTF8, true);
-        if (stream.CanWrite) {
+        if (stream.CanWrite)
+        {
             Writer = new BinaryWriter(stream, Encoding.UTF8, true);
         }
-        readClass = GetType().GetMethod("ReadClass", Type.EmptyTypes);
-        readClassArray = GetType().GetMethod("ReadClassArray", new[] { typeof(long) });
+
+        readClass = GetType().GetMethod("ReadClass", Type.EmptyTypes)!;
+        readClassArray = GetType().GetMethod("ReadClassArray", new[] { typeof(long) })!;
         genericMethodCache = new Dictionary<Type, MethodInfo>();
-        attributeCache = new Dictionary<FieldInfo, VersionAttribute[]>();
+        attributeCache = new Dictionary<FieldInfo, object[]>();
     }
 
     public ulong Position
@@ -37,19 +40,10 @@ public class BinaryStream : IDisposable
         set => stream.Position = (long)value;
     }
 
-    public ulong Length
-    {
-        get => (ulong)stream.Length;
-    }
-
-    public ulong PointerSize
-    {
-        get => Is32Bit ? 4ul : 8ul;
-    }
-
+    public ulong Length => (ulong)stream.Length;
+    public ulong PointerSize => Is32Bit ? 4ul : 8ul;
     public BinaryReader Reader { get; }
-
-    public BinaryWriter Writer { get; }
+    public BinaryWriter? Writer { get; }
 
     public void Dispose()
     {
@@ -57,135 +51,33 @@ public class BinaryStream : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public bool ReadBoolean()
-    {
-        return Reader.ReadBoolean();
-    }
+    public bool ReadBoolean() => Reader.ReadBoolean();
+    public byte ReadByte() => Reader.ReadByte();
+    public byte[] ReadBytes(int count) => Reader.ReadBytes(count);
+    public sbyte ReadSByte() => Reader.ReadSByte();
+    public short ReadInt16() => Reader.ReadInt16();
+    public ushort ReadUInt16() => Reader.ReadUInt16();
+    public int ReadInt32() => Reader.ReadInt32();
+    public uint ReadUInt32() => Reader.ReadUInt32();
+    public long ReadInt64() => Reader.ReadInt64();
+    public ulong ReadUInt64() => Reader.ReadUInt64();
+    public float ReadSingle() => Reader.ReadSingle();
+    public double ReadDouble() => Reader.ReadDouble();
+    public uint ReadCompressedUInt32() => Reader.ReadCompressedUInt32();
+    public int ReadCompressedInt32() => Reader.ReadCompressedInt32();
+    public uint ReadULeb128() => Reader.ReadULeb128();
 
-    public byte ReadByte()
-    {
-        return Reader.ReadByte();
-    }
-
-    public byte[] ReadBytes(int count)
-    {
-        return Reader.ReadBytes(count);
-    }
-
-    public sbyte ReadSByte()
-    {
-        return Reader.ReadSByte();
-    }
-
-    public short ReadInt16()
-    {
-        return Reader.ReadInt16();
-    }
-
-    public ushort ReadUInt16()
-    {
-        return Reader.ReadUInt16();
-    }
-
-    public int ReadInt32()
-    {
-        return Reader.ReadInt32();
-    }
-
-    public uint ReadUInt32()
-    {
-        return Reader.ReadUInt32();
-    }
-
-    public long ReadInt64()
-    {
-        return Reader.ReadInt64();
-    }
-
-    public ulong ReadUInt64()
-    {
-        return Reader.ReadUInt64();
-    }
-
-    public float ReadSingle()
-    {
-        return Reader.ReadSingle();
-    }
-
-    public double ReadDouble()
-    {
-        return Reader.ReadDouble();
-    }
-
-    public uint ReadCompressedUInt32()
-    {
-        return Reader.ReadCompressedUInt32();
-    }
-
-    public int ReadCompressedInt32()
-    {
-        return Reader.ReadCompressedInt32();
-    }
-
-    public uint ReadULeb128()
-    {
-        return Reader.ReadULeb128();
-    }
-
-    public void Write(bool value)
-    {
-        Writer.Write(value);
-    }
-
-    public void Write(byte value)
-    {
-        Writer.Write(value);
-    }
-
-    public void Write(sbyte value)
-    {
-        Writer.Write(value);
-    }
-
-    public void Write(short value)
-    {
-        Writer.Write(value);
-    }
-
-    public void Write(ushort value)
-    {
-        Writer.Write(value);
-    }
-
-    public void Write(int value)
-    {
-        Writer.Write(value);
-    }
-
-    public void Write(uint value)
-    {
-        Writer.Write(value);
-    }
-
-    public void Write(long value)
-    {
-        Writer.Write(value);
-    }
-
-    public void Write(ulong value)
-    {
-        Writer.Write(value);
-    }
-
-    public void Write(float value)
-    {
-        Writer.Write(value);
-    }
-
-    public void Write(double value)
-    {
-        Writer.Write(value);
-    }
+    public void Write(bool value) => Writer!.Write(value);
+    public void Write(byte value) => Writer!.Write(value);
+    public void Write(sbyte value) => Writer!.Write(value);
+    public void Write(short value) => Writer!.Write(value);
+    public void Write(ushort value) => Writer!.Write(value);
+    public void Write(int value) => Writer!.Write(value);
+    public void Write(uint value) => Writer!.Write(value);
+    public void Write(long value) => Writer!.Write(value);
+    public void Write(ulong value) => Writer!.Write(value);
+    public void Write(float value) => Writer!.Write(value);
+    public void Write(double value) => Writer!.Write(value);
 
     private object ReadPrimitive(Type type)
     {
@@ -198,31 +90,19 @@ public class BinaryStream : IDisposable
             "Byte" => ReadByte(),
             "Int64" => ReadIntPtr(),
             "UInt64" => ReadUIntPtr(),
-            _ => throw new NotSupportedException()
+            _ => throw new NotSupportedException(),
         };
     }
 
     public int ReadIndex<T>() where T : IIl2CppIndex
     {
-        switch (T.Size)
+        return T.Size switch
         {
-            case IndexSize.Byte:
-                {
-                    var value = ReadByte();
-                    return value == byte.MaxValue ? -1 : value;
-                }
-            case IndexSize.UShort:
-                {
-                    var value = ReadUInt16();
-                    return value == ushort.MaxValue ? -1 : value;
-                }
-            case IndexSize.Int:
-                {
-                    return ReadInt32();
-                }
-            default:
-                throw new NotSupportedException();
-        }
+            IndexSize.Byte => ReadByte() is var valueByte && valueByte == byte.MaxValue ? -1 : valueByte,
+            IndexSize.UShort => ReadUInt16() is var valueUShort && valueUShort == ushort.MaxValue ? -1 : valueUShort,
+            IndexSize.Int => ReadInt32(),
+            _ => throw new NotSupportedException(),
+        };
     }
 
     public T ReadClass<T>(ulong addr) where T : new()
@@ -246,7 +126,7 @@ public class BinaryStream : IDisposable
             {
                 if (Attribute.IsDefined(i, typeof(VersionAttribute)))
                 {
-                    versionAttributes = i.GetCustomAttributes<VersionAttribute>().ToArray();
+                    versionAttributes = i.GetCustomAttributes().ToArray();
                     attributeCache.Add(i, versionAttributes);
                 }
             }
@@ -254,7 +134,7 @@ public class BinaryStream : IDisposable
             if (versionAttributes?.Length > 0)
             {
                 var read = false;
-                foreach (var versionAttribute in versionAttributes)
+                foreach (dynamic versionAttribute in versionAttributes)
                 {
                     if (Version >= versionAttribute.Min && Version <= versionAttribute.Max)
                     {
@@ -276,15 +156,15 @@ public class BinaryStream : IDisposable
             }
             else if (fieldType.IsEnum)
             {
-                var e = fieldType.GetField("value__").FieldType;
+                var e = fieldType.GetField("value__")!.FieldType;
                 i.SetValue(t, ReadPrimitive(e));
             }
             else if (fieldType.IsArray)
             {
-                var arrayLengthAttribute = i.GetCustomAttribute<ArrayLengthAttribute>();
+                var arrayLengthAttribute = i.GetCustomAttribute<ArrayLengthAttribute>()!;
                 if (!genericMethodCache.TryGetValue(fieldType, out var methodInfo))
                 {
-                    methodInfo = readClassArray.MakeGenericMethod(fieldType.GetElementType());
+                    methodInfo = readClassArray.MakeGenericMethod(fieldType.GetElementType()!);
                     genericMethodCache.Add(fieldType, methodInfo);
                 }
 
@@ -292,7 +172,7 @@ public class BinaryStream : IDisposable
             }
             else if (typeof(IIl2CppIndex).IsAssignableFrom(fieldType))
             {
-                var index = (IIl2CppIndex)Activator.CreateInstance(fieldType);
+                var index = (IIl2CppIndex)Activator.CreateInstance(fieldType)!;
                 index.Read(this);
                 i.SetValue(t, index);
             }
@@ -346,15 +226,8 @@ public class BinaryStream : IDisposable
         return Encoding.UTF8.GetString(bytes.ToArray());
     }
 
-    public long ReadIntPtr()
-    {
-        return Is32Bit ? ReadInt32() : ReadInt64();
-    }
-
-    public virtual ulong ReadUIntPtr()
-    {
-        return Is32Bit ? ReadUInt32() : ReadUInt64();
-    }
+    public long ReadIntPtr() => Is32Bit ? ReadInt32() : ReadInt64();
+    public virtual ulong ReadUIntPtr() => Is32Bit ? ReadUInt32() : ReadUInt64();
 
     protected virtual void Dispose(bool disposing)
     {

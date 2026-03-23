@@ -1,19 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net10.0</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
     <Version>1.0.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
     <Copyright>Copyright © Perfare 2016-2024</Copyright>
     <DebugType>embedded</DebugType>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4"/>
-    <PackageReference Include="Mono.Cecil" Version="0.11.6"/>
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.6" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,31 +37,56 @@
   <ItemGroup>
     <None Update="config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <TargetPath>config.json</TargetPath>
     </None>
+
     <None Update="ghidra.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <TargetPath>bin\ghidra.py</TargetPath>
     </None>
+
     <None Update="ghidra_wasm.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <TargetPath>bin\ghidra_wasm.py</TargetPath>
     </None>
+
     <None Update="ghidra_with_struct.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <TargetPath>bin\ghidra_with_struct.py</TargetPath>
     </None>
+
     <None Update="ida.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <TargetPath>bin\ida.py</TargetPath>
     </None>
+
     <None Update="ida_py3.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <TargetPath>bin\ida_py3.py</TargetPath>
     </None>
+
     <None Update="ida_with_struct.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <TargetPath>bin\ida_with_struct.py</TargetPath>
     </None>
+
     <None Update="ida_with_struct_py3.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <TargetPath>bin\ida_with_struct_py3.py</TargetPath>
     </None>
+
     <None Update="il2cpp_header_to_ghidra.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <TargetPath>bin\il2cpp_header_to_ghidra.py</TargetPath>
     </None>
   </ItemGroup>
-
 </Project>
